@@ -26,15 +26,16 @@ export class AttackManager {
 
       // Calculate grow threads needed to restore money to max if below 99%
       const moneyRatio = moneyAvail / maxMoney;
-      const growThreadsNeeded = moneyRatio < 0.99 ?
-        Math.ceil(ns.growthAnalyze(target, maxMoney / Math.max(moneyAvail, 1))) : 0;
+      const growThreadsNeeded = moneyRatio < 0.99
+        ? Math.ceil(ns.growthAnalyze(target, maxMoney / Math.max(moneyAvail, 1)))
+        : 0;
 
       // Calculate hack threads needed to steal ~25% or 50% of current money (adjust as needed)
       const hackFraction = 0.5;
       const hackThreadsNeeded = Math.ceil(ns.hackAnalyzeThreads(target, moneyAvail * hackFraction));
 
       // Helper function to deploy scripts on the network efficiently
-      const deployScripts = (scriptName, threadsNeeded) => {
+      const deployScripts = async (scriptName, threadsNeeded) => {
         let remainingThreads = threadsNeeded;
 
         // Iterate over rooted servers with free RAM
@@ -51,8 +52,10 @@ export class AttackManager {
 
           const threadsToRun = Math.min(maxThreadsOnServer, remainingThreads);
 
+          // Copy script to target server before exec
+          await ns.scp(scriptName, server);
+
           // Avoid stacking same script + args on this server multiple times
-          // Can add more robust tracking or kill existing as needed
           if (!ns.isRunning(scriptName, server, target)) {
             ns.exec(scriptName, server, threadsToRun, target);
             ns.print(`Running ${scriptName} on ${server} targeting ${target} with ${threadsToRun} threads`);
@@ -64,19 +67,19 @@ export class AttackManager {
 
       // Deploy in order: weaken → grow → hack, skipping actions that don't need threads
       if (weakenThreadsNeeded > 0) {
-        const leftAfterWeaken = deployScripts(weakenScript, weakenThreadsNeeded);
+        const leftAfterWeaken = await deployScripts(weakenScript, weakenThreadsNeeded);
         if (leftAfterWeaken > 0) ns.print(`Not enough RAM to weaken all required threads on ${target}`);
         continue; // Weaken first, wait for next cycle for grow/hack
       }
 
       if (growThreadsNeeded > 0) {
-        const leftAfterGrow = deployScripts(growScript, growThreadsNeeded);
+        const leftAfterGrow = await deployScripts(growScript, growThreadsNeeded);
         if (leftAfterGrow > 0) ns.print(`Not enough RAM to grow all required threads on ${target}`);
         continue; // Grow second before hacking
       }
 
       if (hackThreadsNeeded > 0) {
-        const leftAfterHack = deployScripts(hackScript, hackThreadsNeeded);
+        const leftAfterHack = await deployScripts(hackScript, hackThreadsNeeded);
         if (leftAfterHack > 0) ns.print(`Not enough RAM to hack all required threads on ${target}`);
       }
     }
