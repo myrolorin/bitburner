@@ -1,45 +1,27 @@
-/** @param {NS} ns */
-import { HacknetManager } from "./src/hacknet-manager.js";
-import { ServerManager } from "./src/server-manager.js";
-import { NetworkMap } from "./src/network-map.js";
-import { AttackManager } from "./src/attack-manager.js";
+import { BatchOrchestrator }    from "./src/orchestrators/batch.js";
+import { Logger }               from "./src/utils/logger.js";
+import { NetworkMap }           from "./src/managers/network.js";
+import { PurchaseOrchestrator } from "./src/orchestrators/purchase.js";
 
+/** @param {NS} ns **/
 export async function main(ns) {
   ns.disableLog('ALL');
   ns.clearLog();
-
-  const hacknetManager = new HacknetManager(ns);
-  const serverManager = new ServerManager(ns);
+  const logger = new Logger(ns, "[MAIN] ");
   const networkMap = new NetworkMap(ns);
-  const attackManager = new AttackManager(ns);
+  const purchaseOrchestrator = new PurchaseOrchestrator(ns);
+  const batchOrchestrator = new BatchOrchestrator(ns);
 
   while (true) {
     try {
-      // Scan network & gain root access
-      await networkMap.scanAndMap();
-      await networkMap.tryGainRoot();
+      await networkMap.mapAndRoot();
+      await purchaseOrchestrator.evaluateAndPurchase();
+      await batchOrchestrator.deploy();
 
-      // Manage Hacknet purchases/upgrades
-      await hacknetManager.evaluateAndPurchase();
-
-      // Manage private servers
-      await serverManager.purchaseOrUpgrade();
-
-      // Get all rooted servers as script sources for deployment
-      const rootedServers = Array.from(networkMap.serverMap.entries())
-        .filter(([server, info]) => info.rooted)
-        .map(([server]) => server);
-
-      // Get all hackable targets (rooted, money > 0, exclude home)
-      const targets = rootedServers.filter(srv =>
-        ns.getServerMaxMoney(srv) > 0 && srv !== 'home'
-      );
-
-      await attackManager.deploy(targets, rootedServers);
     } catch (e) {
-      ns.print(`Error in main loop: ${e.message}`);
+      logger.error(`Main loop error: ${e}`);
     }
 
-    await ns.sleep(60000);
+    await ns.sleep(6000);
   }
 }
