@@ -1,3 +1,5 @@
+import { SCRIPT_RAM } from "/src/utils/attack-helpers.js";
+
 /**
  * AttackPlan: Calculates a prep or HWGW batch plan for a target using cached server info.
  */
@@ -6,8 +8,9 @@ export class AttackPlan {
    * @param {NS} ns
    * @param {string} target
    * @param {object} info - Cached server info from server-map
+   * @param {object} config - Config object (for drain-servers, etc)
    */
-  constructor(ns, target, info) {
+  constructor(ns, target, info, config = {}) {
     this.ns = ns;
     this.target = target;
     this.info = info;
@@ -26,11 +29,6 @@ export class AttackPlan {
     const info = this.info;
     const ns = this.ns;
     const drain = this.config["drain-servers"];
-
-    // Script RAMs (can be dynamic if you want)
-    const ramHack = 1.7;
-    const ramGrow = 1.75;
-    const ramWeaken = 1.75;
 
     // Check if prepped
     const prepped = info.securityLevel <= info.minSecurity + 0.5 && info.moneyAvailable >= info.maxMoney * 0.99;
