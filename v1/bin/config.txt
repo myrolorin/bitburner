@@ -1,0 +1,7 @@
+{
+  "drain-servers": "false",
+  "pause-purchases": "false",
+  "hacknet-budget": "0.1",
+  "server-budget": "0.2",
+  "server-map": {}
+}
