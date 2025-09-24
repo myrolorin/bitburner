@@ -1,8 +1,8 @@
-import { HGW_SCRIPTS } from "/v3/src/lib/const/hgw.js"
+import { HGW_SCRIPTS } from "/v3/src/lib/const/scripts.js"
 import { Logger }      from "/v3/src/lib/utils/logger.js"
 
 /** @param {NS} ns */
-export async function copyScripts(recipient) {
+export async function copyScripts(ns, recipient) {
   const logger = new Logger(ns, '[utils/scripts] ')
   const toCopy = [
     HGW_SCRIPTS.hackScript,
@@ -17,6 +17,6 @@ export async function copyScripts(recipient) {
   logger.success(`Copied scripts to ${recipient}.`)
 }
 
-export function getScriptRam(script, hostname) {
+export function getScriptRam(ns, script, hostname) {
   return ns.getScriptRam(script, hostname)
 }

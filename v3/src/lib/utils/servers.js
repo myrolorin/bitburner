@@ -16,7 +16,7 @@ export function chooseBestTarget(servers) {
   let bestScore = bestServer.targetScore()
 
   for (let server of servers) {
-    const currentScore = servers[i].targetScore()
+    const currentScore = server.targetScore()
     if (currentScore > bestScore) {
       bestScore = currentScore
       bestServer = server
@@ -39,7 +39,7 @@ export function mapNetwork(ns) {
     const server = new Server(ns, current)
     serverMap.set(current, server)
 
-    let neighbors = ns.scan(current)
+    let neighbors = ns.scan(server.hostname)
     for (const neighbor of neighbors) {
       if (!scanned.has(neighbor)) {
         toScan.push(neighbor)
@@ -47,5 +47,5 @@ export function mapNetwork(ns) {
     }
   }
 
-  return serverMap.values()
+  return Array.from(serverMap.values())
 }

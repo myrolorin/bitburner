@@ -4,11 +4,12 @@ import { mapNetwork }  from "/v3/src/lib/utils/servers.js"
 
 /** @param {NS} ns */
 export async function main(ns) {
-  ns.diableLog('ALL');
+  ns.disableLog('ALL');
   ns.clearLog();
 
   const logger = new Logger(ns, '[Watchtower] ')
   const servers = mapNetwork(ns)
+  const sleepTime = 60000
 
   while (true) {
     try {
@@ -17,12 +18,14 @@ export async function main(ns) {
           server.gainRoot()
         }
         if (!server.hasScripts()) {
-          copyScripts(server.hostname)
+          await copyScripts(ns, server.hostname)
           logger.success(`Copied scripts to ${server.hostname}`)
         }
       }
     } catch (e) {
       logger.error(`[Watchtower] ERROR: ${e}`)
     }
+
+    await ns.sleep(sleepTime)
   }
 }

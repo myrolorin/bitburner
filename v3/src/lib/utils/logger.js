@@ -6,7 +6,7 @@ export class Logger {
   }
 
   info(message) {
-    this.ns.tprint(`ℹ️ ${this.prefix} ${message}`);
+    this.ns.print(`ℹ️ ${this.prefix} ${message}`);
   }
 
   success(message) {
